@@ -1,25 +1,28 @@
-import logo from './logo.svg';
-import './App.css';
+import React, {useState} from 'react';
+import {BrowserRouter as Router, Switch, Route} from "react-router-dom";
+import Login from "./components/Account/Login/Login";
+import Register from "./components/Account/Register/Register";
+import {PageContext} from "./components/Dashboard/PageContext";
+import Create from "./components/Dashboard/Create/Create";
+import ServerList from "./components/Dashboard/Servers/ServerList";
+import ClientList from "./components/Dashboard/Clients/ClientList";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App = () => {
+    const [page, setPage] = useState("create");
+
+    return (
+        <Router>
+            <Switch>
+                <Route path={"/account/login"} component={Login} exact={true} />
+                <Route path={"/account/register"} component={Register} exact={true} />
+                <PageContext.Provider value={[page, setPage]}>
+                    <Route path={"/dashboard/create"} component={Create} exact={true} />
+                    <Route path={"/dashboard/servers"} component={ServerList} exact={true} />
+                    <Route path={"/dashboard/clients"} component={ClientList} exact={true} />
+                </PageContext.Provider>
+            </Switch>
+        </Router>
+    );
+};
 
 export default App;
