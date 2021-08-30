@@ -15,6 +15,8 @@ import {Collapse, IconButton} from "@material-ui/core";
 import CloseIcon from "@material-ui/icons/Close";
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
+import {useHistory} from "react-router-dom";
+import {useAuth} from "../AuthenticationContext";
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -55,7 +57,10 @@ const validationSchema = Yup.object().shape({
 })
 
 export default function Login() {
+    const [token, setToken] = useAuth();
+
     const classes = useStyles();
+    const history = useHistory();
 
     let initialState = {
         email: "",
@@ -64,6 +69,7 @@ export default function Login() {
     };
 
     const [open, setOpen] = useState(false);
+    const [msg, setMsg] = useState("");
 
     return (
         <Layout>
@@ -78,11 +84,28 @@ export default function Login() {
                     validateForm().then(() => {
                         if (!values.isRobot) {
                             setOpen(true);
+                            setMsg("Robot olmadığınızı doğrulayın.");
                         }
                         else {
-                            console.log(values);
+                            fetch("http://localhost:8080/api/account/login", {
+                                method: "POST",
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(values)
+                            }).then((resp) => resp.json()).then((data) => {
+                                if (data.success) {
+                                    setToken(data.token);
+                                    setOpen(false);
+                                    history.push("/dashboard/create");
+                                }
+                                else {
+                                    setOpen(true);
+                                    setMsg("Email adresi veya parola hatalı.");
+                                }
+                            }).catch((err) => console.error(err));
                             resetForm();
-                            setOpen(false);
                         }
                         setSubmitting(false);
                     });
@@ -111,7 +134,7 @@ export default function Login() {
                                         </IconButton>
                                     }
                                 >
-                                    Robot olmadığınızı doğrulayın!
+                                    {msg}
                                 </Alert>
                             </Collapse>
                             <TextField

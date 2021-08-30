@@ -16,6 +16,8 @@ import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Checkbox from "@material-ui/core/Checkbox";
 import Button from "@material-ui/core/Button";
 import {usePage} from "../PageContext";
+import {useHistory} from "react-router-dom";
+import {useAuth} from "../../Account/AuthenticationContext";
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -53,30 +55,57 @@ function ipv4(message = 'Geçersiz bir IP girildi.') {
 Yup.addMethod(Yup.string, 'ipv4', ipv4);
 
 const validationSchemaClient = Yup.object().shape({
-    type: Yup.string().required("Oluşturma türü boş bırakılamaz."),
+    kind: Yup.string().required("Oluşturma türü boş bırakılamaz."),
     platform: Yup.string().required("Platform boş bırakılamaz."),
-    remoteHost: Yup.string().ipv4().required("Uzak bağlantı adresi boş bırakılamaz."),
-    remotePort: Yup.number().typeError("Port bilgisi geçersiz.").required("Uzak bağlantı portu boş bırakılamaz."),
-})
+    remote_host: Yup.string().ipv4().required("Uzak bağlantı adresi boş bırakılamaz."),
+    remote_port: Yup.number().typeError("Port bilgisi geçersiz.").required("Uzak bağlantı portu boş bırakılamaz."),
+});
 
 const MalwareForm = ({type}) => {
+    const history = useHistory();
+
     const classes = useStyles();
     const initialStateClient = {
-        type: "",
+        kind: "",
         platform: "",
-        remoteHost: "",
-        remotePort: "",
-        reverseShell: true,
+        remote_host: "",
+        remote_port: "",
+        reverse_shell: true,
         download: false,
         upload: false,
         screenshot: false,
-        fileCrypto: false,
+        file_crypto: false,
     };
+
+    const [token, _] = useAuth();
 
     return (
         <Formik initialValues={initialStateClient} validationSchema={validationSchemaClient} onSubmit={(values, {validateForm, resetForm, setSubmitting}) => {
             validateForm().then(() => {
-                console.log(values);
+                let functions = [];
+                for (let key in values)
+                    if (typeof(values[key]) === "boolean" && values[key])
+                        functions.push(key);
+
+                fetch(`http://localhost:8080/api/create`, {
+                    method: "POST",
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        kind: values.kind,
+                        platform: values.platform,
+                        remote_host: values.remote_host,
+                        remote_port: values.remote_port,
+                        functions
+                    })
+                }).then((resp) => resp.json()).then((data) => {
+                    if (data.success) {
+                        history.push("/dashboard/create");
+                    }
+                }).catch((err) => console.error(err));
                 resetForm();
                 setSubmitting(false);
             });
@@ -93,16 +122,16 @@ const MalwareForm = ({type}) => {
                         <Grid style={{marginBottom: ".4rem"}} item xs={12}>
                             <Typography color={"#2c3040"} variant={"subtitle1"} component={"h6"}>Genel Özellikler</Typography>
                         </Grid>
-                        <FormControl error={Boolean(touched.type && errors.type)} style={{marginBottom: "1rem"}} fullWidth variant="outlined" className={classes.formControl}>
+                        <FormControl error={Boolean(touched.kind && errors.kind)} style={{marginBottom: "1rem"}} fullWidth variant="outlined" className={classes.formControl}>
                             <InputLabel htmlFor="outlined-age-native-simple">Oluşturma Türü</InputLabel>
                             <Select
                                 native
-                                value={values.type}
+                                value={values.kind}
                                 onChange={handleChange}
                                 label="Oluşturma Türü"
                                 onBlur={handleBlur}
                                 inputProps={{
-                                    name: 'type',
+                                    name: 'kind',
                                     id: 'outlined-age-native-simple',
                                 }}
                             >
@@ -111,7 +140,7 @@ const MalwareForm = ({type}) => {
                                 <option value={"server"}>Sunucu</option>
                                 <option value={"both"}>İstemci ve Sunucu</option>
                             </Select>
-                            <FormHelperText>{touched.type && errors.type}</FormHelperText>
+                            <FormHelperText>{touched.kind && errors.kind}</FormHelperText>
                         </FormControl>
                         <FormControl error={Boolean(touched.platform && errors.platform)} fullWidth variant="outlined" className={classes.formControl}>
                             <InputLabel htmlFor="outlined-age-native-simple">Platform</InputLabel>
@@ -140,13 +169,13 @@ const MalwareForm = ({type}) => {
                         </Grid>
                         <Grid style={{marginBottom: "1rem"}} item xs={12}>
                             <TextField
-                                name="remoteHost"
+                                name="remote_host"
                                 variant="outlined"
                                 fullWidth
                                 label="Uzak Bağlantı Adresi"
-                                value={values.remoteHost}
-                                error={Boolean(touched.remoteHost && errors.remoteHost)}
-                                helperText={touched.remoteHost && errors.remoteHost}
+                                value={values.remote_host}
+                                error={Boolean(touched.remote_host && errors.remote_host)}
+                                helperText={touched.remote_host && errors.remote_host}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                             />
@@ -156,10 +185,10 @@ const MalwareForm = ({type}) => {
                                 variant="outlined"
                                 fullWidth
                                 label="Uzak Bağlantı Portu"
-                                name="remotePort"
-                                value={values.remotePort}
-                                error={Boolean(touched.remotePort && errors.remotePort)}
-                                helperText={touched.remotePort && errors.remotePort}
+                                name="remote_port"
+                                value={values.remote_port}
+                                error={Boolean(touched.remote_port && errors.remote_port)}
+                                helperText={touched.remote_port && errors.remote_port}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                             />
@@ -186,9 +215,9 @@ const MalwareForm = ({type}) => {
                             <FormControlLabel
                                 control={
                                     <Checkbox
-                                        checked={values.reverseShell}
+                                        checked={values.reverse_shell}
                                         onChange={handleChange}
-                                        name="reverseShell"
+                                        name="reverse_shell"
                                         color="primary"
                                     />
                                 }
@@ -230,9 +259,9 @@ const MalwareForm = ({type}) => {
                             <FormControlLabel
                                 control={
                                     <Checkbox
-                                        checked={values.fileCrypto}
+                                        checked={values.file_crypto}
                                         onChange={handleChange}
-                                        name="fileCrypto"
+                                        name="file_crypto"
                                         color="primary"
                                     />
                                 }

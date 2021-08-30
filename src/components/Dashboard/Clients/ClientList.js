@@ -1,31 +1,33 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import Liste from "../Liste";
 import DashboardLayout from "../DashboardLayout";
 import {usePage} from "../PageContext";
+import {useAuth} from "../../Account/AuthenticationContext";
 
 const ClientList = () => {
+    const [token, setToken] = useAuth();
     const [page, setPage] = usePage();
+
+    const [data, setData] = useState([]);
 
     useEffect(() => {
         setPage("clients");
+        fetch("http://localhost:8080/api/clients", {
+            method: "GET",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        }).then((resp) => resp.json()).then((d) => {
+            console.log(d);
+            setData(d.result);
+        }).catch((err) => console.error(err));
     }, []);
-
-    const dummyData = [
-        {
-            remoteHost: "127.0.0.1",
-            remotePort: "4443",
-            functions: ["Download", "Upload"]
-        },
-        {
-            remoteHost: "127.0.0.1",
-            remotePort: "8080",
-            functions: ["Download", "Upload", "File encryption/decryption"]
-        },
-    ];
 
     return (
         <DashboardLayout>
-            <Liste page={"İstemciler"} data={dummyData} />
+            <Liste page={"İstemciler"} data={data} />
         </DashboardLayout>
     );
 };

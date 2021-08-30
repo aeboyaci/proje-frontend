@@ -40,9 +40,9 @@ const Liste = ({page, data}) => {
                                 aria-controls={`panel${i + 1}bh-content`}
                                 id={`panel${i + 1}bh-header`}
                             >
-                                <Typography className={classes.heading}>Uzak Bağlantı Adresi: {data.remoteHost}</Typography>
-                                <Typography className={classes.heading}>Uzak Bağlantı Portu: {data.remotePort}</Typography>
-                                <Typography className={classes.heading}>Oluşturulma Tarihi: 28/08/2021</Typography>
+                                <Typography className={classes.heading}>Uzak Bağlantı Adresi: {data.remote_host}</Typography>
+                                <Typography className={classes.heading}>Uzak Bağlantı Portu: {data.remote_port}</Typography>
+                                <Typography className={classes.heading}>Oluşturulma Tarihi: {data.created_at}</Typography>
                             </AccordionSummary>
                             <AccordionDetails>
                                 <Grid container direction={"column"}>

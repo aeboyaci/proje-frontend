@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import "./dashboard.css";
 import Typography from "@material-ui/core/Typography";
 import $ from "jquery";
@@ -9,13 +9,14 @@ import AddIcon from '@material-ui/icons/Add';
 import FormatListBulletedIcon from '@material-ui/icons/FormatListBulleted';
 import {usePage} from "./PageContext";
 import {useHistory} from "react-router-dom";
+import {useAuth} from "../Account/AuthenticationContext";
 
 
 const DashboardLayout = ({children}) => {
     const [open, setOpen] = useState(true);
-    const [page, setPage] = usePage();
-
     const history = useHistory();
+    const [token, setToken] = useAuth();
+    const [page, setPage] = usePage();
 
     const hamburgerClick = (e) => {
         let newOpenValue = !open;
@@ -43,6 +44,11 @@ const DashboardLayout = ({children}) => {
         if (newOpenValue)
             $("#brand h1").removeAttr("style");
     };
+
+    useEffect(() => {
+        if (!token)
+            history.push("/account/login");
+    }, []);
 
     return (
         <React.Fragment>
@@ -84,7 +90,7 @@ const DashboardLayout = ({children}) => {
                                 </ListItemIcon>
                                 <ListItemText primary="İstemciler" />
                             </ListItem>
-                            <ListItem button>
+                            <ListItem onClick={() => { setToken(null); history.push("/account/login"); } } button>
                                 <ListItemIcon>
                                     <ExitToAppIcon />
                                 </ListItemIcon>
