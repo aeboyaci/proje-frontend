@@ -41,24 +41,20 @@ const useStyles = makeStyles((theme) =>
     }),
 );
 
-function ipv4(message = 'Geçersiz bir IP girildi.') {
-    return this.matches(/(^(\d{1,3}\.){3}(\d{1,3})$)/, {
+function hostCheck(message = 'Geçersiz bir bağlantı adresi girildi.') {
+    return this.matches(/((^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})|([a-zA-Z]+[\-]?[0-9]*[\-]?\w*\.\w+))/gm, {
         message,
         excludeEmptyString: true
-    }).test('ip', message, value => {
-        return value === undefined || value.trim() === ''
-            ? true
-            : value.split('.').find(i => parseInt(i, 10) > 255) === undefined;
     });
 }
 
-Yup.addMethod(Yup.string, 'ipv4', ipv4);
+Yup.addMethod(Yup.string, 'hostCheck', hostCheck);
 
 const validationSchemaClient = Yup.object().shape({
     kind: Yup.string().required("Oluşturma türü boş bırakılamaz."),
     platform: Yup.string().required("Platform boş bırakılamaz."),
     arch: Yup.string().required("Mimari bilgisi boş bırakılamaz."),
-    remote_host: Yup.string().ipv4().required("Uzak bağlantı adresi boş bırakılamaz."),
+    remote_host: Yup.string().hostCheck().required("Uzak bağlantı adresi boş bırakılamaz."),
     remote_port: Yup.number().typeError("Port bilgisi geçersiz.").required("Uzak bağlantı portu boş bırakılamaz."),
 });
 
