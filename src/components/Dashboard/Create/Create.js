@@ -70,7 +70,7 @@ const MalwareForm = () => {
         arch: "",
         remote_host: "",
         remote_port: "",
-        reverse_shell: true,
+        reverse_shell: false,
         download: false,
         upload: false,
         screenshot: false,

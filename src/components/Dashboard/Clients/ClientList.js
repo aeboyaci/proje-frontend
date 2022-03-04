@@ -12,7 +12,7 @@ const ClientList = () => {
 
     useEffect(() => {
         setPage("clients");
-        fetch("http://localhost:8080/api/clients", {
+        fetch("http://localhost:8001/api/clients", {
             method: "GET",
             headers: {
                 'Accept': 'application/json',
