@@ -100,7 +100,7 @@ const DashboardLayout = ({children}) => {
                     </List>
                 </div>
             </div>
-            <div id={"main"} style={{ overFlowY: "auto"  }}>
+            <div id={"main"} style={{ overflowY: "auto" }}>
                 <Grid className={"container"}>
                     {children}
                 </Grid>
