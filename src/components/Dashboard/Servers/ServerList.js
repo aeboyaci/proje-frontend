@@ -12,7 +12,7 @@ const ServerList = () => {
 
     useEffect(() => {
         setPage("servers");
-        fetch("http://localhost:8080/api/servers", {
+        fetch("http://localhost:8001/api/servers", {
             method: "GET",
             headers: {
                 'Accept': 'application/json',

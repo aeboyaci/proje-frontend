@@ -87,7 +87,7 @@ export default function Login() {
                             setMsg("Robot olmadığınızı doğrulayın.");
                         }
                         else {
-                            fetch("http://localhost:8080/api/account/login", {
+                            fetch("http://localhost:8001/api/account/login", {
                                 method: "POST",
                                 headers: {
                                     'Accept': 'application/json',
